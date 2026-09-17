@@ -206,6 +206,15 @@ namespace NeoAxis
 
 		///////////////////////////////////////////////
 
+		public enum DefaultFalseTrueEnum
+		{
+			Default,
+			False,
+			True,
+		}
+
+		///////////////////////////////////////////////
+
 		///// <summary>
 		///// Whether to clear source 3D files such as FBX, GLTF, etc. The actual data of 3D models is stored in settings files.
 		///// </summary>

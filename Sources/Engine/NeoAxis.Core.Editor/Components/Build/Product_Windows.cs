@@ -72,6 +72,20 @@ namespace NeoAxis
 		ReferenceField<VerbosityLevelEnum> _verbosityLevel = VerbosityLevelEnum.Minimal;
 
 		/// <summary>
+		/// Whether to include .NET runtime and assemblies in the built product.
+		/// </summary>
+		[Category( "Compilation" )]
+		[DefaultValue( DefaultFalseTrueEnum.Default )]
+		public Reference<DefaultFalseTrueEnum> SelfContained
+		{
+			get { if( _selfContained.BeginGet() ) SelfContained = _selfContained.Get( this ); return _selfContained.value; }
+			set { if( _selfContained.BeginSet( this, ref value ) ) { try { SelfContainedChanged?.Invoke( this ); } finally { _selfContained.EndSet(); } } }
+		}
+		/// <summary>Occurs when the <see cref="SelfContained"/> property value changes.</summary>
+		public event Action<Product_Windows> SelfContainedChanged;
+		ReferenceField<DefaultFalseTrueEnum> _selfContained = DefaultFalseTrueEnum.Default;
+
+		/// <summary>
 		/// The name of application executable file.
 		/// </summary>
 		[Category( "Compilation" )]
@@ -385,6 +399,9 @@ namespace NeoAxis
 
 				var projectFullPath = Path.Combine( VirtualFileSystem.Directories.Project, @"Sources\NeoAxis.Player\NeoAxis.Player.csproj" );
 				var arguments = $"build \"{projectFullPath}\" --configuration {configuration}-Windows-{Profile.Value} --output \"{destinationFolder}\" --verbosity {verbosity}";
+
+				if( SelfContained.Value != DefaultFalseTrueEnum.Default )
+					arguments += " -p:SelfContained=" + SelfContained.Value.ToString().ToLower();
 
 				var cts = new CancellationTokenSource();
 				var runResultTask = ProcessUtility.RunAndWaitAsync( dotnetExePath, arguments, errorDataReceivedCallback: ErrorReceived, outputDataReceivedCallback: OutputReceived, cancellationToken: cts.Token );

@@ -35,7 +35,7 @@ namespace NeoAxis
 		/// <summary>
 		/// The build configuration.
 		/// </summary>
-		[Category( "Linux" )]
+		[Category( "Compilation" )]
 		[DefaultValue( ConfigurationEnum.Release )]
 		public Reference<ConfigurationEnum> Configuration
 		{
@@ -49,6 +49,7 @@ namespace NeoAxis
 		/// <summary>
 		/// The target platform architecture.
 		/// </summary>
+		[Category( "Compilation" )]
 		[DefaultValue( ProfileEnum.x64 )]
 		public Reference<ProfileEnum> Profile
 		{
@@ -62,6 +63,7 @@ namespace NeoAxis
 		/// <summary>
 		/// Define constants for Project assembly separated by semicolon. For example: "CLIENT;ANOTHER_CONSTANT".
 		/// </summary>
+		[Category( "Compilation" )]
 		[DefaultValue( "" )]
 		public Reference<string> DefineConstants
 		{
@@ -71,6 +73,20 @@ namespace NeoAxis
 		/// <summary>Occurs when the <see cref="DefineConstants"/> property value changes.</summary>
 		public event Action<Product_Linux> DefineConstantsChanged;
 		ReferenceField<string> _defineConstants = "";
+
+		/// <summary>
+		/// Whether to include .NET runtime and assemblies in the built product.
+		/// </summary>
+		[Category( "Compilation" )]
+		[DefaultValue( DefaultFalseTrueEnum.Default )]
+		public Reference<DefaultFalseTrueEnum> SelfContained
+		{
+			get { if( _selfContained.BeginGet() ) SelfContained = _selfContained.Get( this ); return _selfContained.value; }
+			set { if( _selfContained.BeginSet( this, ref value ) ) { try { SelfContainedChanged?.Invoke( this ); } finally { _selfContained.EndSet(); } } }
+		}
+		/// <summary>Occurs when the <see cref="SelfContained"/> property value changes.</summary>
+		public event Action<Product_Linux> SelfContainedChanged;
+		ReferenceField<DefaultFalseTrueEnum> _selfContained = DefaultFalseTrueEnum.Default;
 
 		///// <summary>
 		///// The name of application executable file.
@@ -182,6 +198,7 @@ namespace NeoAxis
 		/// <summary>
 		/// Whether to include files for debugging (xml, pdb).
 		/// </summary>
+		[Category( "Linux" )]
 		[DefaultValue( false )]
 		public Reference<bool> DebugFiles
 		{
@@ -358,6 +375,9 @@ namespace NeoAxis
 			{
 				var projectFullPath = Path.Combine( VirtualFileSystem.Directories.Project, @"Sources\NeoAxis.Player\NeoAxis.Player.csproj" );
 				var arguments = $"build \"{projectFullPath}\" --configuration {Configuration.Value}-Linux-{Profile.Value} --output \"{destinationFolder}\" --verbosity minimal";
+
+				if( SelfContained.Value != DefaultFalseTrueEnum.Default )
+					arguments += " -p:SelfContained=" + SelfContained.Value.ToString().ToLower();
 
 				var success = ProcessUtility.RunAndWait( dotnetExePath, arguments, out var result ) == 0;
 				if( !success )
